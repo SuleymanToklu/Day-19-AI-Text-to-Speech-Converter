@@ -96,8 +96,8 @@ with gr.Blocks(theme=theme) as demo:
 
     gr.Examples(
         examples=[
-            ["Hello, this is a test of the text to speech system.", "Sarah (Female)"],
-            ["Artificial intelligence will reshape the world.", "David (Male)"],
+            ["Hello, this is a test of the text to speech system.", "Selin (Female)"],
+            ["Artificial intelligence will reshape the world.", "Davut (Male)"],
         ],
         inputs=[text_input, speaker_dropdown],
         outputs=audio_output,
