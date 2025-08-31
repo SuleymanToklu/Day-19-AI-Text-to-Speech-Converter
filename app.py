@@ -4,18 +4,46 @@ import numpy as np
 import requests
 import soundfile as sf
 from io import BytesIO
-import librosa 
+import librosa
+import traceback 
 from transformers import SpeechT5Processor, SpeechT5ForTextToSpeech, SpeechT5HifiGan
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-processor = SpeechT5Processor.from_pretrained("microsoft/speecht5_tts")
-model = SpeechT5ForTextToSpeech.from_pretrained("microsoft/speecht5_tts").to(device)
-vocoder = SpeechT5HifiGan.from_pretrained("microsoft/speecht5_hifigan").to(device)
+
+def load_models():
+    """Loads all the required models from Hugging Face."""
+    print("Loading AI models...")
+    processor = SpeechT5Processor.from_pretrained("microsoft/speecht5_tts")
+    model = SpeechT5ForTextToSpeech.from_pretrained("microsoft/speecht5_tts").to(device)
+    vocoder = SpeechT5HifiGan.from_pretrained("microsoft/speecht5_hifigan").to(device)
+    print("Models loaded successfully.")
+    return processor, model, vocoder
+
+try:
+    processor, model, vocoder = load_models()
+except Exception as e:
+    with gr.Blocks() as demo:
+        gr.HTML('<h1 style="text-align: center; color: red;">Application Startup Failed</h1>')
+        gr.Markdown(f"""
+        ## Fatal Error: Could not load the core AI models from Hugging Face.
+        This might be a temporary issue with the Hugging Face Hub.
+        
+        **Error Details:**
+        ```
+        {e}
+        ```
+        **What you can do:**
+        1.  Try restarting the Space from the settings menu (three dots icon ፧ at the top-right).
+        2.  Check the logs for more detailed error messages.
+        """)
+    demo.launch()
+    exit()
+
 
 VOICE_URLS = {
-    "Davut (Male)": "https://raw.githubusercontent.com/microsoft/cognitive-services-speech-sdk/master/samples/csharp/sharedcontent/console/whatstheweatherlike.wav",
-    "Selin (Female)": "https://github.com/librosa/librosa/blob/main/tests/data/test1_44100.wav?raw=true"
+    "Voice 1 (Male)": "https://raw.githubusercontent.com/microsoft/cognitive-services-speech-sdk/master/samples/csharp/sharedcontent/console/whatstheweatherlike.wav",
+    "Voice 2 (Female)": "https://github.com/librosa/librosa/blob/main/tests/data/test1_44100.wav?raw=true"
 }
 
 speaker_embeddings = {}
@@ -23,7 +51,7 @@ speaker_embeddings = {}
 print("Generating speaker embeddings from live audio files...")
 for name, url in VOICE_URLS.items():
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=15)
         response.raise_for_status()
         
         audio_data, sample_rate = sf.read(BytesIO(response.content))
@@ -37,9 +65,25 @@ for name, url in VOICE_URLS.items():
         speaker_embeddings[name] = embedding.to(device)
         print(f"- Voice '{name}' generated successfully.")
 
-    except Exception as e:
-        print(f"Could not generate voice '{name}'. Error: {e}")
+    except Exception:
+        print(f"--- ERROR: Could not generate voice '{name}'. ---")
+        traceback.print_exc()
         continue
+
+if not speaker_embeddings:
+    with gr.Blocks(theme=gr.themes.Soft()) as demo:
+        gr.HTML('<h1 style="text-align: center; color: red;">Application Startup Failed</h1>')
+        gr.Markdown("""
+        The application cannot start because it failed to download or process the necessary voice sample files from the source URLs. 
+        This is often a temporary network issue on Hugging Face's servers.
+        
+        **What you can do:**
+        1.  Try **restarting the Space** from the settings menu (three dots icon ፧ at the top-right). This often resolves temporary network problems.
+        2.  Check the **Logs** tab for detailed error messages to see exactly why the download failed.
+        """)
+    demo.launch()
+    exit()
+
 
 speaker_names = list(speaker_embeddings.keys())
 
@@ -66,6 +110,13 @@ theme = gr.themes.Soft(
     primary_hue=gr.themes.colors.blue, 
     font=gr.themes.GoogleFont("Inter")
 )
+
+examples_list = []
+if "Voice 2 (Female)" in speaker_names:
+    examples_list.append(["Hello, this is a test of the text to speech system.", "Voice 2 (Female)"])
+if "Voice 1 (Male)" in speaker_names:
+    examples_list.append(["Artificial intelligence will reshape the world.", "Voice 1 (Male)"])
+
 
 with gr.Blocks(theme=theme) as demo:
     gr.HTML('<h1 style="text-align: center; font-size: 2.5em;">AI Text-to-Speech Converter 🗣️</h1>')
@@ -94,16 +145,14 @@ with gr.Blocks(theme=theme) as demo:
         outputs=audio_output
     )
 
-    gr.Examples(
-        examples=[
-            ["Hello, this is a test of the text to speech system.", "Selin (Female)"],
-            ["Artificial intelligence will reshape the world.", "Davut (Male)"],
-        ],
-        inputs=[text_input, speaker_dropdown],
-        outputs=audio_output,
-        fn=synthesize_speech,
-        cache_examples=False 
-    )
+    if examples_list: 
+        gr.Examples(
+            examples=examples_list,
+            inputs=[text_input, speaker_dropdown],
+            outputs=audio_output,
+            fn=synthesize_speech,
+            cache_examples=False 
+        )
     
     with gr.Accordion("How does this work?", open=False):
         gr.Markdown("""
