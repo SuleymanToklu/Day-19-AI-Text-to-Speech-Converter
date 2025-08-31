@@ -49,8 +49,10 @@ if all([processor, model, vocoder, speaker_model]):
         if sample_rate != 16000:
             audio_data = librosa.resample(y=audio_data, orig_sr=sample_rate, target_sr=16000)
 
+ 
         with torch.no_grad():
             embedding_tensor = speaker_model.encode_batch(torch.tensor(audio_data).to(device))
+ 
             speaker_embedding = embedding_tensor.squeeze().unsqueeze(0).to(device)
         
         print("- Single voice generated successfully.")
@@ -76,6 +78,7 @@ def synthesize_speech(text):
     return (16000, speech.cpu().numpy())
 
 
+
 theme = gr.themes.Soft(
     primary_hue=gr.themes.colors.blue, 
     font=gr.themes.GoogleFont("Inter")
@@ -83,6 +86,7 @@ theme = gr.themes.Soft(
 
 with gr.Blocks(theme=theme) as demo:
     if not speaker_embedding or not model:
+
         gr.HTML('<h1 style="text-align: center; color: red;">Application Startup Failed</h1>')
         gr.Markdown("""
         ## Fatal Error: The application could not start.
