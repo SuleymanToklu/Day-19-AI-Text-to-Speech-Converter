@@ -7,6 +7,7 @@ from io import BytesIO
 import librosa
 import traceback 
 from transformers import SpeechT5Processor, SpeechT5ForTextToSpeech, SpeechT5HifiGan
+from speechbrain.pretrained import SpeakerRecognition 
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -18,20 +19,24 @@ def load_models():
         processor = SpeechT5Processor.from_pretrained("microsoft/speecht5_tts")
         model = SpeechT5ForTextToSpeech.from_pretrained("microsoft/speecht5_tts").to(device)
         vocoder = SpeechT5HifiGan.from_pretrained("microsoft/speecht5_hifigan").to(device)
+        speaker_model = SpeakerRecognition.from_huggingface(
+            "speechbrain/speaker-recognition-ecapa-tdnn", 
+            savedir="speechbrain_models"
+        ).to(device)
         print("Models loaded successfully.")
-        return processor, model, vocoder
+        return processor, model, vocoder, speaker_model
     except Exception as e:
         print("--- FATAL ERROR: Could not load base models. ---")
         traceback.print_exc()
-        return None, None, None
+        return None, None, None, None
 
-processor, model, vocoder = load_models()
+processor, model, vocoder, speaker_model = load_models()
 
 
 STABLE_VOICE_URL = "https://github.com/gradio-app/gradio/raw/main/demo/audio_debugger/cantina.wav"
 speaker_embedding = None
 
-if processor: 
+if all([processor, model, vocoder, speaker_model]): 
     print("Generating single speaker embedding from a stable audio file...")
     try:
         response = requests.get(STABLE_VOICE_URL, timeout=15)
@@ -44,7 +49,10 @@ if processor:
         if sample_rate != 16000:
             audio_data = librosa.resample(y=audio_data, orig_sr=sample_rate, target_sr=16000)
 
-        speaker_embedding = processor(audio=audio_data, sampling_rate=16000, return_tensors="pt").speaker_embeddings.to(device)
+        with torch.no_grad():
+            embedding_tensor = speaker_model.encode_batch(torch.tensor(audio_data).to(device))
+            speaker_embedding = embedding_tensor.squeeze().unsqueeze(0).to(device)
+        
         print("- Single voice generated successfully.")
 
     except Exception:
@@ -75,7 +83,6 @@ theme = gr.themes.Soft(
 
 with gr.Blocks(theme=theme) as demo:
     if not speaker_embedding or not model:
-        # If anything failed during startup, show a clear error message.
         gr.HTML('<h1 style="text-align: center; color: red;">Application Startup Failed</h1>')
         gr.Markdown("""
         ## Fatal Error: The application could not start.
@@ -121,11 +128,10 @@ with gr.Blocks(theme=theme) as demo:
         
         with gr.Accordion("How does this work?", open=False):
             gr.Markdown("""
-            This app uses two main AI models from Hugging Face:
-            1.  **[microsoft/speecht5_tts](https://huggingface.co/microsoft/speecht5_tts):** A powerful model that converts your text into a spectrogram (a visual representation of sound).
-            2.  **[microsoft/speecht5_hifigan](https://huggingface.co/microsoft/speecht5_hifigan):** A vocoder that transforms the spectrogram into a high-fidelity audio waveform that you can hear.
-            
-            The voice is created by generating a 'speaker embedding' from a single, reliable audio clip on the fly, making the app robust against broken links.
+            This app uses three main AI models:
+            1.  **[microsoft/speecht5_tts](https://huggingface.co/microsoft/speecht5_tts):** Converts your text into a spectrogram (a visual representation of sound).
+            2.  **[microsoft/speecht5_hifigan](https://huggingface.co/microsoft/speecht5_hifigan):** A vocoder that transforms the spectrogram into a high-fidelity audio waveform.
+            3.  **[speechbrain/speaker-recognition-ecapa-tdnn](https://huggingface.co/speechbrain/speaker-recognition-ecapa-tdnn):** Analyzes a voice clip to create a unique 'speaker embedding', which gives the AI its voice.
             """)
         
         gr.Markdown("""--- \n Created by [Süleyman Toklu](https://github.com/SuleymanToklu) for the #30DayAIMarathon.""")

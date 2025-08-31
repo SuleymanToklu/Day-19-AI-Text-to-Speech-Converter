@@ -1,8 +1,8 @@
-transformers
-torch
 gradio
-numpy
+torch
+transformers
+sentencepiece
+librosa
 requests
 soundfile
-librosa
-sentencepiece
+speechbrain
