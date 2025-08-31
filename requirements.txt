@@ -1,0 +1,9 @@
+torch
+torchvision
+torchaudio
+gradio
+transformers
+datasets
+soundfile
+speechbrain
+protobuf
