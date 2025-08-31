@@ -1,9 +1,8 @@
-torch
-torchvision
-torchaudio
-gradio
 transformers
-datasets
+torch
+gradio
+numpy
+requests
 soundfile
-speechbrain
-protobuf
+librosa
+sentencepiece
