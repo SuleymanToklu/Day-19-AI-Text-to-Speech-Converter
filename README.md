@@ -1,33 +1,42 @@
+# Gelişmiş Metinden Sese Dönüştürücü Web Uygulaması 🗣️
+
+Python, Gradio ve Hugging Face Transformers kütüphaneleri kullanılarak oluşturulmuş, kullanıcı tarafından girilen metni gerçekçi bir insan sesiyle seslendiren modern ve kullanıcı dostu bir metinden sese dönüştürme (Text-to-Speech) web uygulamasıdır.
+
+Bu proje, **#30DayAIMarathon** kapsamında Süleyman Toklu tarafından geliştirilmiştir.
+
+## ✨ Özellikler
+
+- **Yüksek Kaliteli Ses:** `microsoft/speecht5_tts` ve `microsoft/speecht5_hifigan` modelleri ile doğal ve akıcı ses üretimi.
+- **Dinamik Ses Kimliği:** Uygulama, harici bir ses dosyasına ihtiyaç duymadan, başlangıçta Hugging Face `datasets` kütüphanesinden güvenilir bir ses kimliği (speaker embedding) oluşturur.
+- **Kullanıcı Dostu Arayüz:** Gradio ile oluşturulmuş basit, modern ve etkileşimli bir web arayüzü.
+- **Donanım Desteği:** Hem GPU (CUDA) hem de CPU üzerinde çalışacak şekilde tasarlanmıştır.
+- **Kolay Kullanım:** Denemeler için hazır örnek metinler sunar.
+
+## 🛠️ Kullanılan Teknolojiler
+
+- **Backend:** Python
+- **Web Arayüzü:** Gradio
+- **Yapay Zeka Modelleri:** PyTorch, Hugging Face Transformers
+- **Modeller:**
+  - **Metinden Spektrograma:** `microsoft/speecht5_tts`
+  - **Spektrogramdan Sese (Vokoder):** `microsoft/speecht5_hifigan`
+
+## 🚀 Kurulum ve Çalıştırma
+
+Projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyin.
 
 
-30 Günlük Yapay Zeka Maratonu'nun 19. Günü için geliştirilen bu uygulama, yazdığınız metinleri yapay zeka kullanarak sese dönüştürür. Microsoft'un SpeechT5 modelini temel alır ve çeşitli ses tonları sunar.
-🚀 Nasıl Kullanılır?
+## ⚙️ Nasıl Çalışır?
 
-Uygulamayı kullanmak çok kolay:
+1.  **Başlangıç:** Uygulama başlatıldığında, `microsoft/speecht5_tts` ve `microsoft/speecht5_hifigan` modelleri Hugging Face'ten yüklenir.
+2.  **Ses Kimliği Oluşturma:** Sesin karakterini belirlemek için `datasets` kütüphanesi üzerinden standart bir konuşmacı vektörü (speaker embedding) çekilir.
+3.  **Metin Girişi:** Kullanıcı, Gradio arayüzündeki metin kutusuna bir cümle girer ve "Generate Speech" butonuna tıklar.
+4.  **Sentezleme:**
+    - Girilen metin, `SpeechT5Processor` ile modelin anlayacağı token'lara dönüştürülür.
+    - `SpeechT5` modeli, bu token'ları ve önceden oluşturulan ses kimliğini kullanarak bir spektrogram üretir.
+    - `HifiGan` vokoder'ı, bu spektrogramı dinlenebilir bir ses dalgasına çevirir.
+5.  **Ses Çıktısı:** Oluşturulan ses, arayüzdeki ses oynatıcı bileşeninde kullanıcıya sunulur.
 
-    Metin Girin: Yukarıdaki metin kutusuna seslendirmek istediğiniz herhangi bir şeyi yazın.
+---
 
-    Ses Seçin: "Choose a Voice" menüsünden Awesome-Amy veya Deep-David gibi farklı ses tonlarından birini seçin.
-
-    Oluştur'a Tıklayın: "Generate Speech" butonuna basarak sesi oluşturun.
-
-    Dinleyin: Birkaç saniye içinde oluşturulan ses, sağdaki ses çalar üzerinde belirecektir. Play tuşuna basarak dinleyebilirsiniz!
-
-🌟 Temel Özellikler
-
-    Yüksek Kaliteli Ses: Microsoft'un son teknoloji SpeechT5 modelini kullanarak doğal ve akıcı sesler üretir.
-
-    Farklı Ses Tonları: Farklı "konuşmacı kimlikleri" sayesinde çeşitli sesler arasından seçim yapma imkanı sunar.
-
-    Etkileşimli Arayüz: Gradio ile oluşturulmuş basit ve kullanıcı dostu bir arayüze sahiptir.
-
-🛠️ Teknik Detaylar
-
-    Ana Model: microsoft/speecht5_tts
-
-    Vocoder (Ses Sentezleyici): microsoft/speecht5_hifigan
-
-    Ses Kimlikleri Veri Seti: Matthijs/cmu-arctic-xvectors
-
-
-Bu uygulama, Süleyman Toklu tarafından #30DayAIMarathon projesi kapsamında geliştirilmiştir.
+*Created by Süleyman Toklu for the #30DayAIMarathon.*

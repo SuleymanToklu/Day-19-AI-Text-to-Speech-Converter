@@ -1,8 +1,7 @@
-gradio
 torch
 transformers
-sentencepiece
-librosa
-requests
+gradio
+datasets
 soundfile
-speechbrain
+numpy
+sentencepiece
