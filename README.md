@@ -1,5 +1,4 @@
-title: Metinden Sese Dönüştürücü emoji: 🗣️ colorFrom: blue colorTo: green sdk: gradio sdk_version: 4.12.0 app_file: app.py pinned: false license: mit
-🗣️ Metinden Sese Dönüştürücü (Text-to-Speech)
+
 
 30 Günlük Yapay Zeka Maratonu'nun 19. Günü için geliştirilen bu uygulama, yazdığınız metinleri yapay zeka kullanarak sese dönüştürür. Microsoft'un SpeechT5 modelini temel alır ve çeşitli ses tonları sunar.
 🚀 Nasıl Kullanılır?
@@ -29,5 +28,6 @@ Uygulamayı kullanmak çok kolay:
     Vocoder (Ses Sentezleyici): microsoft/speecht5_hifigan
 
     Ses Kimlikleri Veri Seti: Matthijs/cmu-arctic-xvectors
+
 
 Bu uygulama, Süleyman Toklu tarafından #30DayAIMarathon projesi kapsamında geliştirilmiştir.
